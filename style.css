@@ -1,0 +1,90 @@
+/* ===== Palet: navy, putih, gold, teal ===== */
+:root{--navy:#0a1a35;--navy2:#12305a;--panel:rgba(255,255,255,.08);--line:rgba(229,185,78,.28);
+ --gold:#e8bd55;--teal:#35c2b0;--white:#fff;--soft:#d9e3f3;--red:#ff8a8a;--r:20px}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%;background:var(--navy)}
+body{overflow-x:hidden;overflow-wrap:break-word;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--white);line-height:1.5;
+ background:radial-gradient(circle at 50% -10%,#1d4a85 0,transparent 55%),linear-gradient(160deg,var(--navy),var(--navy2));min-height:100vh}
+/* Pola geometris Islami (CSS murni) */
+.bg-pattern{position:fixed;inset:0;opacity:.06;pointer-events:none;
+ background:conic-gradient(from 45deg,var(--gold) 0 25%,transparent 0 50%,var(--gold) 0 75%,transparent 0) 0 0/56px 56px}
+.app{position:relative;max-width:580px;margin:0 auto;padding:20px 16px 40px;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+.screen{display:none;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:28px 20px;box-shadow:0 18px 40px rgba(0,0,0,.35);backdrop-filter:blur(4px)}
+.screen.active{display:block;animation:rise .45s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* Home */
+.ornament{width:104px;height:104px;margin:0 auto 6px;display:block;filter:drop-shadow(0 0 14px rgba(232,189,85,.45))}
+.star8{fill:none;stroke:var(--gold);stroke-width:2;stroke-linejoin:round}
+.moon,.dot{fill:var(--gold)}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(32px,9vw,46px);line-height:1.1;color:var(--gold);letter-spacing:.5px}
+.tag{margin-top:6px;color:var(--teal);font-weight:600;letter-spacing:2px}
+h2{font-size:clamp(21px,5.5vw,27px);margin-bottom:14px}
+.subtitle{margin:10px 0 16px;color:var(--soft)}
+.highscore{margin-bottom:20px;color:var(--gold);font-weight:600}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{font:inherit;font-weight:600;color:var(--white);background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22);border-radius:16px;padding:14px 16px;min-height:52px;cursor:pointer;transition:transform .15s,background .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px);background:rgba(255,255,255,.2)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(180deg,#f3ce75,var(--gold));color:var(--navy);border-color:var(--gold);box-shadow:0 6px 18px rgba(232,189,85,.35)}
+.btn.primary:hover{background:linear-gradient(180deg,#f8d98c,#ecc460)}
+.big-btn{font-size:20px;min-height:60px}
+:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+.info{text-align:left;margin:0 0 20px 20px;display:grid;gap:8px}
+.info-text{margin-bottom:20px;text-align:left}
+/* Kategori */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.card{font:inherit;color:var(--white);min-width:0;min-height:128px;background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:16px 8px;cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;transition:transform .15s,border-color .15s,background .15s}
+.card span{font-size:34px}
+.card small{color:var(--soft);font-size:13px;line-height:1.3}
+.card:hover{transform:translateY(-4px);border-color:var(--gold);background:rgba(255,255,255,.14)}
+.card:active{transform:scale(.96);border-color:var(--teal)}
+/* Quiz */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+#lives{font-size:20px;letter-spacing:2px}
+.timer{color:var(--gold);font-size:20px;font-weight:700;background:rgba(0,0,0,.25);border-radius:99px;padding:2px 14px}
+.timer.low{color:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+#combo{color:var(--teal);font-style:normal;font-weight:700}
+.progress{height:10px;background:rgba(255,255,255,.15);border-radius:99px;overflow:hidden;margin-bottom:12px}
+#bar{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .4s}
+.question{margin:18px 0;text-align:left;line-height:1.35;font-size:clamp(21px,5.6vw,28px);font-weight:700}
+.options{display:grid;gap:10px}
+.opt{font:inherit;font-size:17px;text-align:left;color:var(--white);background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.25);border-radius:16px;padding:14px 16px;min-height:56px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;transition:transform .15s,background .15s,border-color .15s}
+.opt:hover:not(:disabled){transform:translateX(4px);background:rgba(255,255,255,.2);border-color:var(--gold)}
+.opt:disabled{cursor:default;color:var(--white)}
+/* Benar/salah: warna + tanda ✓ / ✗ agar tidak hanya mengandalkan warna */
+.opt.correct{background:rgba(53,194,176,.3);border-color:var(--teal)}
+.opt.correct::after{content:"✓";font-weight:800;color:var(--teal);font-size:22px}
+.opt.wrong{background:rgba(255,138,138,.2);border-color:var(--red);animation:shake .3s}
+.opt.wrong::after{content:"✗";font-weight:800;color:var(--red);font-size:22px}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.feedback{margin-top:16px;text-align:left;background:rgba(0,0,0,.3);border-left:5px solid var(--gold);border-radius:16px;padding:16px;animation:rise .3s both}
+.feedback[hidden]{display:none}
+#fbTitle{font-weight:800;font-size:20px;margin-bottom:6px}
+#fbAnswer{font-weight:700;color:var(--gold);margin-bottom:6px}
+#fbText{margin-bottom:14px;color:var(--soft)}
+.feedback .btn{width:100%}
+/* Hasil */
+.stars{font-size:38px;margin-bottom:6px;animation:pop .6s ease both .15s}
+.big{font-size:clamp(40px,12vw,56px);color:var(--gold);font-weight:800;animation:pop .6s ease both}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 20px}
+.stats div{background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:16px;padding:12px 4px}
+.stats b{display:block;font-size:26px}
+.stats small{color:var(--soft)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .3s}
+@media(min-width:600px){.app{padding-top:40px}.screen{padding:38px}.cards{gap:16px}}
+@media(max-width:340px){.row{grid-template-columns:1fr}.card small{font-size:12px}.opt{font-size:16px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== Upgrade final ===== */
+.chips{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:0;margin:12px 0}
+.chips li{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-size:14px;color:var(--soft)}
+.chips b{color:var(--gold)}
+.highscore{display:inline-block;background:rgba(232,189,85,.12);border:1px solid var(--line);border-radius:99px;padding:6px 18px}
+.tprog{height:6px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;margin-bottom:6px}
+#tbar{height:100%;width:100%;background:var(--teal);transition:width .9s linear}
+#tbar.low{background:var(--red)}
+#combo:not(:empty){background:rgba(53,194,176,.2);border:1px solid var(--teal);border-radius:99px;padding:1px 10px;margin-left:6px;font-size:14px;animation:pop .3s}
+.timer.low{border:1px solid var(--red)}

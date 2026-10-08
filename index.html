@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kisah Nabi &amp; Rasul – Interactive Quiz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg-pattern" aria-hidden="true"></div>
+<main class="app">
+
+  <!-- HOME -->
+  <section id="home" class="screen active">
+    <svg class="ornament" viewBox="0 0 120 120" aria-hidden="true">
+      <polygon class="star8" points="60,6 71,34 99,21 86,49 114,60 86,71 99,99 71,86 60,114 49,86 21,99 34,71 6,60 34,49 21,21 49,34"/>
+      <path class="moon" d="M70 36a26 26 0 1 0 0 48a21 21 0 1 1 0-48z"/>
+      <circle class="dot" cx="78" cy="52" r="3.5"/>
+    </svg>
+    <h1>Kisah Nabi &amp; Rasul</h1>
+    <p class="tag">Interactive Quiz</p>
+    <p class="subtitle">Belajar kisah, uji pengetahuan, dan temukan keteladanan.</p>
+    <ul class="chips" aria-label="Info game">
+      <li><b id="nQ">40</b> soal</li><li><b>4</b> kategori</li><li><b>3</b> nyawa</li><li><b>15</b> detik</li>
+    </ul>
+    <p class="highscore" aria-live="polite">🏆 High Score: <b id="hs">0</b> <span id="plays"></span></p>
+    <div class="stack">
+      <button class="btn primary big-btn" data-go="categories">▶ MULAI QUIZ</button>
+      <div class="row">
+      <button class="btn" data-go="howto">📖 Cara Bermain</button>
+      <button class="btn" data-go="about">ℹ Tentang</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARA BERMAIN -->
+  <section id="howto" class="screen">
+    <h2>📖 Cara Bermain</h2>
+    <ul class="info">
+      <li>Pilih kategori.</li>
+      <li>Setiap permainan berisi 10 soal.</li>
+      <li>Waktu menjawab setiap soal adalah 15 detik.</li>
+      <li>Jawaban benar mendapat +10 poin.</li>
+      <li>Kamu punya 3 nyawa. Jawaban salah atau waktu habis mengurangi 1 nyawa.</li>
+      <li>Jawaban benar berturut-turut (3x atau lebih) membentuk combo.</li>
+      <li>Setelah selesai, lihat hasil dan high score.</li>
+    </ul>
+    <button class="btn" data-go="home">← Kembali</button>
+  </section>
+
+  <!-- TENTANG -->
+  <section id="about" class="screen">
+    <h2>ℹ Tentang Game</h2>
+    <p class="info-text">Game edukasi tentang kisah Nabi dan Rasul untuk anak dan pelajar. Soal disusun dari pengetahuan Islam yang umum. Project tugas siswa SMK PPLG, dibuat dengan HTML, CSS, dan JavaScript.</p>
+    <button class="btn" data-go="home">← Kembali</button>
+  </section>
+
+  <!-- KATEGORI -->
+  <section id="categories" class="screen">
+    <h2>Pilih Kategori</h2>
+    <p class="subtitle">Setiap permainan berisi 10 soal.</p>
+    <div class="cards">
+      <button class="card" data-cat="kisah"><span>📜</span><b>Kisah Nabi &amp; Rasul</b><small>Urutan dan peristiwa kisah</small></button>
+      <button class="card" data-cat="mukjizat"><span>✨</span><b>Mukjizat Nabi</b><small>Tanda kebesaran Allah</small></button>
+      <button class="card" data-cat="teladan"><span>🌿</span><b>Keteladanan</b><small>Sifat dan akhlak mulia</small></button>
+      <button class="card" data-cat="campuran"><span>🌙</span><b>Campuran</b><small>Semua topik diacak</small></button>
+    </div>
+    <button class="btn" data-go="home">← Kembali</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="screen">
+    <div class="topbar">
+      <span>SOAL <b id="qnum">1</b> / 10</span>
+      <span id="lives" aria-label="Nyawa">❤️❤️❤️</span>
+    </div>
+    <div class="progress" role="progressbar" aria-label="Kemajuan soal"><div id="bar"></div></div>
+    <div class="topbar">
+      <span>Skor: <b id="score">0</b> <em id="combo"></em></span>
+      <span class="timer" aria-label="Sisa waktu">⏱ <b id="time">15</b></span>
+    </div>
+    <div class="tprog" aria-hidden="true"><div id="tbar"></div></div>
+    <h2 id="question" class="question"></h2>
+    <div id="options" class="options"></div>
+    <div id="feedback" class="feedback" hidden>
+      <p id="fbTitle"></p>
+      <p id="fbAnswer"></p>
+      <p id="fbText"></p>
+      <button class="btn primary" id="next">Lanjut</button>
+    </div>
+  </section>
+
+  <!-- HASIL -->
+  <section id="result" class="screen">
+    <h2>QUIZ SELESAI!</h2>
+    <div class="stars" id="stars"></div>
+    <p class="big"><b id="rScore">0</b> / 100</p>
+    <p id="rMsg" class="subtitle"></p>
+    <p id="rBest" class="highscore"></p>
+    <p id="rPlays" class="subtitle"></p>
+    <div class="stats">
+      <div><b id="rRight">0</b><small>Benar</small></div>
+      <div><b id="rWrong">0</b><small>Salah</small></div>
+      <div><b id="rAcc">0%</b><small>Akurasi</small></div>
+    </div>
+    <div class="stack">
+      <button class="btn primary" id="again">🔄 Main Lagi</button>
+      <button class="btn" data-go="home">🏠 Kembali ke Menu</button>
+    </div>
+  </section>
+
+</main>
+<script src="script.js"></script>
+</body>
+</html>
