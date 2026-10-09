@@ -4,18 +4,19 @@ Game kuis edukasi berbasis web tentang kisah Nabi dan Rasul untuk anak dan pelaj
 
 ## Fitur
 - 3 kategori soal (Kisah Nabi & Rasul, Mukjizat Nabi, Keteladanan) ditambah **Campuran**, yang otomatis mengambil dari semua soal (tidak ada data terpisah)
-- 40 soal pilihan ganda (jumlah di Home dihitung otomatis dari data); urutan soal dan pilihan diacak, 10 soal per permainan
-- Timer 15 detik per soal dengan bar waktu dan peringatan merah di 5 detik terakhir (berhenti saat jawaban dipilih; waktu habis dihitung salah)
-- 3 nyawa (❤️/💔), skor +10 per jawaban benar, combo mulai 3 benar berturut-turut
-- Feedback benar/salah (warna + tanda ✓/✗), jawaban yang benar, dan pembahasan
-- Panel "Cara Bermain" dan "Tentang"
-- Halaman hasil: skor, benar, salah, akurasi, bintang, pesan, high score, total permainan, dan indikator 🏆 HIGH SCORE BARU!
-- High score dan jumlah permainan tersimpan di LocalStorage
+- 3 tingkat kesulitan, masing-masing dengan soal, timer, nyawa, dan poin sendiri:
+  - **Easy · Pemula**: 20 detik, 5 nyawa, +10 poin
+  - **Normal · Menengah**: 15 detik, 3 nyawa, +20 poin
+  - **Hard · Ahli**: 12 detik, 3 nyawa, +30 poin
+- Pilihan jumlah soal 10 / 20 / 30. Jika soal yang tersedia kurang, jumlahnya menyesuaikan dan pemain diberi tahu (soal tidak diulang diam-diam; minimal 5 soal untuk mulai)
+- Urutan soal dan pilihan jawaban diacak setiap permainan
+- Combo mulai 3 jawaban benar berturut-turut, pembahasan setelah menjawab
+- Halaman hasil: kategori, kesulitan, benar, salah, akurasi, skor, bintang, durasi, rekor
+- Rekor tersimpan per kombinasi kategori dan kesulitan, plus statistik total di LocalStorage (data versi lama dimigrasikan, bukan dihapus)
+- Validasi bank soal otomatis saat game dibuka (peringatan muncul di Console jika ada soal bermasalah)
 - Responsif untuk HP, tablet, dan desktop
 
-Catatan: kode game dibungkus dalam satu fungsi (IIFE) sehingga tidak ada variabel global.
-
-Belum ada: efek suara/musik dan tombol mute.
+Jumlah soal saat ini tampil di halaman Home (dihitung otomatis). Bank soal masih terus dikembangkan.
 
 ## Teknologi
 HTML5, CSS3, Vanilla JavaScript, LocalStorage.
@@ -25,7 +26,8 @@ HTML5, CSS3, Vanilla JavaScript, LocalStorage.
 kuis-kisah-nabi/
 ├── index.html   (struktur halaman)
 ├── style.css    (tampilan)
-├── script.js    (data soal di array RAW + logika game)
+├── soal-tambahan.js (soal tambahan dengan tingkat kesulitan)
+├── script.js        (soal awal di array RAW + logika game)
 ├── assets/
 │   ├── images/  (kosong, untuk pengembangan)
 │   └── sounds/  (kosong, untuk pengembangan)
@@ -37,11 +39,11 @@ kuis-kisah-nabi/
 2. Di VS Code pasang ekstensi **Live Server**, klik kanan `index.html`, lalu **Open with Live Server**.
 
 ## Cara menambah soal
-Tambahkan satu baris di array `RAW` pada `script.js`:
+Tambahkan satu baris di array `SOAL_TAMBAHAN` pada `soal-tambahan.js`:
 ```js
-["kisah", "Pertanyaan?", ["A", "B", "C", "D"], 1, "Pembahasan singkat."]
+["kisah", "normal", "Pertanyaan?", ["A", "B", "C", "D"], 1, "Pembahasan singkat."]
 ```
-Kategori: `kisah`, `mukjizat`, atau `teladan`. Angka `1` adalah indeks jawaban benar (0–3, urutan A–D). Pastikan sumber soal dapat dipertanggungjawabkan.
+Kategori: `kisah`, `mukjizat`, atau `teladan`. Kesulitan: `easy`, `normal`, atau `hard`. Angka `1` adalah indeks jawaban benar (0-3, urutan A-D). Pastikan fakta bersumber dari Al-Qur'an atau sumber Islam tepercaya. Soal yang salah format memunculkan peringatan di Console browser (F12).
 
 ## Deploy ke Vercel
 1. Upload folder ke repository GitHub.

@@ -45,19 +45,61 @@ const RAW = [
 ["mukjizat","Laut terbelah setelah dipukul dengan tongkat oleh...",["Nabi Musa AS","Nabi Nuh AS","Nabi Daud AS","Nabi Isa AS"],0,"Dengan izin Allah, laut terbelah sehingga Nabi Musa AS dan pengikutnya selamat."],
 ["kisah","Siapakah ibu Nabi Isa AS?",["Siti Hajar","Siti Maryam","Siti Sarah","Siti Asiyah"],1,"Ibu Nabi Isa AS adalah Maryam, yang namanya menjadi nama salah satu surah Al-Qur'an."]
 ];
-const QUESTIONS = RAW.map(r => ({category:r[0], question:r[1], options:r[2], answer:r[3], explanation:r[4]}));
+/* ===== KONFIGURASI KESULITAN ===== */
+const DIFFS = {
+  easy:   {label:"Easy · Pemula",     time:20, lives:5, points:10},
+  normal: {label:"Normal · Menengah", time:15, lives:3, points:20},
+  hard:   {label:"Hard · Ahli",       time:12, lives:3, points:30}
+};
+const DIFF_KEYS = Object.keys(DIFFS);
+const CATS = {kisah:"Kisah Nabi & Rasul", mukjizat:"Mukjizat Nabi", teladan:"Keteladanan", campuran:"Campuran"};
+const MIN_Q = 5; // minimal soal agar sesi boleh dimulai
+
+/* ===== BANK SOAL: soal lama + soal-tambahan.js ===== */
+const OLD_NORMAL = new Set([9, 11, 14, 16, 19, 21, 22, 23, 38]); // indeks soal lama yang tingkat normal
+const toQ = (r, d) => ({category:r[0], difficulty:d || r[1], question:r[d ? 1 : 2], options:r[d ? 2 : 3], answer:r[d ? 3 : 4], explanation:r[d ? 4 : 5]});
+const OLD = RAW.map((r, i) => toQ(r, OLD_NORMAL.has(i) ? "normal" : "easy"));
+const EXTRA = (typeof SOAL_TAMBAHAN !== "undefined" ? SOAL_TAMBAHAN : []).map(r => toQ(r));
+const counter = {};
+const QUESTIONS = OLD.concat(EXTRA).map(q => {
+  counter[q.category] = (counter[q.category] || 0) + 1;
+  q.id = q.category + "-" + String(counter[q.category]).padStart(3, "0");
+  return q;
+});
+
+/* Validasi otomatis: hasil peringatan tampil di console */
+function validateBank(){
+  const issues = [], ids = new Set(), seen = new Set();
+  QUESTIONS.forEach(q => {
+    const k = q.id;
+    if (ids.has(k)) issues.push(k + ": id ganda"); ids.add(k);
+    if (!q.question || !q.question.trim()) issues.push(k + ": pertanyaan kosong");
+    if (!Array.isArray(q.options) || q.options.length !== 4 || q.options.some(o => !o || !o.trim()) || new Set(q.options).size !== 4) issues.push(k + ": opsi tidak valid");
+    if (!Number.isInteger(q.answer) || q.answer < 0 || q.answer > 3) issues.push(k + ": index jawaban");
+    if (!q.explanation || !q.explanation.trim()) issues.push(k + ": pembahasan kosong");
+    if (!CATS[q.category] || q.category === "campuran") issues.push(k + ": kategori");
+    if (!DIFFS[q.difficulty]) issues.push(k + ": kesulitan");
+    const norm = (q.question || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (seen.has(norm)) issues.push(k + ": pertanyaan duplikat"); seen.add(norm);
+  });
+  if (issues.length) console.warn("Validasi bank soal:", issues);
+  return issues;
+}
+validateBank();
 
 /* ===== STATE ===== */
 const $ = id => document.getElementById(id);
-const TIME = 15, TOTAL = 10;
-let list = [], idx = 0, score = 0, lives = 3, right = 0, streak = 0, left = TIME, timer = null, cat = "campuran", locked = false, waitingNext = false, readyAt = 0, resultAt = 0;
+const KEY = "kuisNabi";
+let sel = {cat:"campuran", diff:"normal", count:10};
+let cfg = DIFFS.normal, list = [], idx = 0, score = 0, lives = 0, right = 0, streak = 0, left = 0;
+let timer = null, locked = false, waitingNext = false, readyAt = 0, resultAt = 0, startedAt = 0;
 
 /* ===== NAVIGASI ===== */
 function show(id){
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
   window.scrollTo(0, 0);
-  if (id === "home") $("nQ").textContent = QUESTIONS.length; // jumlah soal selalu sesuai data
-renderHome();
+  if (id === "home") renderHome();
+  if (id === "categories") renderSetup();
 }
 // resultAt: abaikan klik ganda yang jatuh pada tombol hasil tepat setelah quiz selesai
 const justFinished = () => Date.now() - resultAt < 500;
@@ -65,49 +107,83 @@ document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => {
   if (b.closest("#result") && justFinished()) return;
   stopTimer(); show(b.dataset.go);
 });
-document.querySelectorAll("[data-cat]").forEach(b => b.onclick = () => startGame(b.dataset.cat));
-$("again").onclick = () => { if (!justFinished()) startGame(cat); };
+document.querySelectorAll("[data-cat]").forEach(b => b.onclick = () => { sel.cat = b.dataset.cat; renderSetup(); });
+document.querySelectorAll("[data-diff]").forEach(b => b.onclick = () => { sel.diff = b.dataset.diff; renderSetup(); });
+document.querySelectorAll("[data-count]").forEach(b => b.onclick = () => { sel.count = Number(b.dataset.count); renderSetup(); });
+$("start").onclick = startGame;
 $("next").onclick = nextQuestion;
+$("again").onclick = () => { if (!justFinished()) startGame(); };
 
-/* ===== LOCAL STORAGE ===== */
-function getStats(){
-  try {
-    const d = JSON.parse(localStorage.getItem("kuisNabi")) || {};
-    return {high: Number(d.high) || 0, plays: Number(d.plays) || 0};
-  } catch(e){ return {high:0, plays:0}; }
+/* ===== PEMILIHAN SOAL ===== */
+const poolFor = (cat, diff) => QUESTIONS.filter(q => (cat === "campuran" || q.category === cat) && q.difficulty === diff);
+function renderSetup(){
+  document.querySelectorAll("[data-cat]").forEach(b => { b.classList.toggle("selected", b.dataset.cat === sel.cat); b.setAttribute("aria-pressed", b.dataset.cat === sel.cat); });
+  document.querySelectorAll("[data-diff]").forEach(b => {
+    b.classList.toggle("selected", b.dataset.diff === sel.diff); b.setAttribute("aria-pressed", b.dataset.diff === sel.diff);
+    b.querySelector(".dn").textContent = poolFor(sel.cat, b.dataset.diff).length + " soal tersedia";
+  });
+  document.querySelectorAll("[data-count]").forEach(b => { b.classList.toggle("selected", Number(b.dataset.count) === sel.count); b.setAttribute("aria-pressed", Number(b.dataset.count) === sel.count); });
+  const n = poolFor(sel.cat, sel.diff).length, real = Math.min(sel.count, n), a = $("avail");
+  a.classList.toggle("warn", n < sel.count);
+  a.textContent = n < MIN_Q ? "Soal untuk pilihan ini belum cukup (" + n + "). Pilih kategori atau kesulitan lain."
+    : n < sel.count ? "Hanya " + n + " soal tersedia, jadi sesi ini berisi " + real + " soal."
+    : "Sesi ini berisi " + real + " soal dari " + n + " soal yang tersedia.";
+  $("start").disabled = n < MIN_Q;
 }
-function saveStats(s){ try { localStorage.setItem("kuisNabi", JSON.stringify(s)); } catch(e){} }
+
+/* ===== LOCAL STORAGE (dengan migrasi data lama) ===== */
+function getStats(){
+  let d = {};
+  try { d = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){}
+  if (typeof d !== "object") d = {};
+  const n = v => Number(v) || 0;
+  const s = {plays:n(d.plays), right:n(d.right), wrong:n(d.wrong), high:{}, diffPlays:{}, records:{}, history:[]};
+  DIFF_KEYS.forEach(k => {
+    s.high[k] = n(d.high && typeof d.high === "object" ? d.high[k] : 0);
+    s.diffPlays[k] = n(d.diffPlays && d.diffPlays[k]);
+  });
+  if (typeof d.high === "number" || typeof d.high === "string") s.high.easy = Math.max(s.high.easy, n(d.high)); // migrasi versi lama
+  if (d.records && typeof d.records === "object") Object.keys(d.records).forEach(k => { s.records[k] = n(d.records[k]); });
+  if (Array.isArray(d.history)) s.history = d.history.filter(h => h && typeof h === "object").slice(-10).map(h => ({score:n(h.score), cat:String(h.cat), diff:String(h.diff)}));
+  return s;
+}
+function saveStats(s){ try { localStorage.setItem(KEY, JSON.stringify(s)); } catch(e){} }
 function renderHome(){
   const s = getStats();
-  $("hs").textContent = s.high;
+  $("nQ").textContent = QUESTIONS.length;
+  $("hs").textContent = DIFF_KEYS.map(k => k[0].toUpperCase() + k.slice(1) + " " + s.high[k]).join(" · ");
   $("plays").textContent = s.plays ? "(" + s.plays + "x main)" : "";
 }
 
 /* ===== GAME ===== */
-function shuffle(a){ return a.map(v => [Math.random(), v]).sort((x,y) => x[0]-y[0]).map(x => x[1]); }
-
-function startGame(c){
-  cat = c;
-  const pool = c === "campuran" ? QUESTIONS : QUESTIONS.filter(q => q.category === c);
-  list = shuffle(pool).slice(0, TOTAL);
-  idx = 0; score = 0; lives = 3; right = 0; streak = 0;
+function shuffle(a){ // Fisher-Yates
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function startGame(){
+  const pool = poolFor(sel.cat, sel.diff);
+  if (pool.length < MIN_Q) return;
+  cfg = DIFFS[sel.diff];
+  list = shuffle(pool).slice(0, Math.min(sel.count, pool.length)); // tanpa pengulangan
+  idx = 0; score = 0; lives = cfg.lives; right = 0; streak = 0; startedAt = Date.now();
   $("score").textContent = 0; $("combo").textContent = "";
   show("quiz");
   loadQuestion();
 }
+function renderLives(){ $("lives").textContent = "❤️".repeat(lives) + "💔".repeat(cfg.lives - lives); }
 
 function loadQuestion(){
   locked = false; waitingNext = false;
   readyAt = Date.now() + 300; // cegah klik ganda tidak sengaja menjawab soal baru
   const q = list[idx];
   $("qnum").textContent = idx + 1;
+  $("qtotal").textContent = list.length;
   $("bar").style.width = (idx / list.length * 100) + "%";
-  $("lives").textContent = "❤️".repeat(lives) + "💔".repeat(3 - lives);
+  renderLives();
   $("question").textContent = q.question;
-  $("question").setAttribute("aria-live", "polite");
   $("feedback").hidden = true;
-  // acak urutan pilihan, tetap lacak mana yang benar
-  const opts = shuffle(q.options.map((t, i) => ({t, ok: i === q.answer})));
+  const opts = shuffle(q.options.map((t, i) => ({t, ok: i === q.answer}))); // jawaban benar ikut terlacak
   const box = $("options");
   box.innerHTML = "";
   opts.forEach((o, i) => {
@@ -120,17 +196,16 @@ function loadQuestion(){
   });
   startTimer();
 }
-
 function startTimer(){
   stopTimer();
-  left = TIME; renderTime();
+  left = cfg.time; renderTime();
   timer = setInterval(() => { left--; renderTime(); if (left <= 0) answer(null); }, 1000);
 }
 function stopTimer(){ clearInterval(timer); timer = null; }
 function renderTime(){
   $("time").textContent = Math.max(left, 0);
   $("time").parentElement.classList.toggle("low", left <= 5);
-  $("tbar").style.width = (Math.max(left, 0) / TIME * 100) + "%";
+  $("tbar").style.width = (Math.max(left, 0) / cfg.time * 100) + "%";
   $("tbar").classList.toggle("low", left <= 5);
 }
 
@@ -140,28 +215,26 @@ function answer(btn){
   locked = true; waitingNext = true; stopTimer();
   const q = list[idx];
   const correct = btn && btn.dataset.ok === "true";
-  document.querySelectorAll(".opt").forEach(b => {
-    b.disabled = true;
-    if (b.dataset.ok === "true") b.classList.add("correct");
-  });
+  document.querySelectorAll(".opt").forEach(b => { b.disabled = true; if (b.dataset.ok === "true") b.classList.add("correct"); });
+  $("bar").style.width = ((idx + 1) / list.length * 100) + "%";
   if (correct){
-    score += 10; right++; streak++;
+    score += cfg.points; right++; streak++;
     $("score").textContent = score; $("score").classList.add("pop");
     setTimeout(() => $("score").classList.remove("pop"), 300);
     $("combo").textContent = streak >= 3 ? "Combo x" + streak + "!" : "";
-    $("fbTitle").textContent = "✅ Jawaban Benar! +10";
+    $("fbTitle").textContent = "✅ Jawaban Benar! +" + cfg.points;
   } else {
     if (btn) btn.classList.add("wrong");
     lives = Math.max(0, lives - 1); streak = 0; $("combo").textContent = "";
-    $("lives").textContent = "❤️".repeat(lives) + "💔".repeat(3 - lives);
+    renderLives();
     $("fbTitle").textContent = btn ? "❌ Belum Tepat" : "⏰ Waktu habis";
   }
   $("fbAnswer").textContent = "Jawaban yang benar: " + q.options[q.answer];
   $("fbText").textContent = "Pembahasan: " + q.explanation;
   $("next").textContent = (lives <= 0 || idx === list.length - 1) ? "Lihat Hasil" : "Lanjut";
   $("feedback").hidden = false;
+  $("feedback").scrollIntoView({block:"nearest", behavior:"smooth"});
 }
-
 function nextQuestion(){
   if (!waitingNext) return; // cegah klik ganda "Lanjut" / "Lihat Hasil"
   waitingNext = false;
@@ -172,26 +245,31 @@ function nextQuestion(){
 
 function finish(){
   stopTimer();
-  const answered = idx;                 // soal yang benar-benar dijawab
-  const wrong = answered - right;
+  const answered = idx, wrong = answered - right;
   const acc = answered ? Math.round(right / answered * 100) : 0;
-  const pct = score;                    // skor 0-100 dipakai untuk bintang & pesan
+  const max = list.length * cfg.points;
+  const pct = max ? score / max * 100 : 0; // bintang & pesan memakai persentase dari skor maksimum
+  const rk = sel.cat + "|" + sel.diff;
   const s = getStats();
-  const isNew = score > s.high;
-  s.plays++; if (isNew) s.high = score;
+  const isNew = score > (s.records[rk] || 0);
+  s.plays++; s.right += right; s.wrong += wrong; s.diffPlays[sel.diff]++;
+  if (isNew) s.records[rk] = score;
+  s.high[sel.diff] = Math.max(s.high[sel.diff], score);
+  s.history.push({score, cat:sel.cat, diff:sel.diff}); s.history = s.history.slice(-10);
   saveStats(s);
-  $("rScore").textContent = score;
-  $("rRight").textContent = right;
-  $("rWrong").textContent = wrong;
-  $("rAcc").textContent = acc + "%";
+  const sec = Math.round((Date.now() - startedAt) / 1000);
+  $("rInfo").textContent = CATS[sel.cat] + " · " + cfg.label;
+  $("rScore").textContent = score; $("rMax").textContent = max;
+  $("rRight").textContent = right; $("rWrong").textContent = wrong; $("rAcc").textContent = acc + "%";
+  $("rMeta").textContent = "Dijawab " + answered + " dari " + list.length + " soal · Durasi " + Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
   const n = pct >= 90 ? 5 : pct >= 70 ? 4 : pct >= 50 ? 3 : pct >= 30 ? 2 : 1;
   $("stars").textContent = "⭐".repeat(n);
   $("rMsg").textContent = pct >= 90 ? "Hebat! Pemahamanmu sangat baik."
     : pct >= 70 ? "Bagus! Tinggal sedikit lagi untuk hasil maksimal."
     : pct >= 50 ? "Sudah cukup baik. Yuk pelajari lagi."
     : "Jangan menyerah. Coba lagi dan tingkatkan hasilmu.";
-  $("rBest").textContent = isNew ? "🏆 HIGH SCORE BARU!" : "🏆 High Score: " + s.high;
-  $("rPlays").textContent = "Total permainan: " + s.plays;
+  $("rBest").textContent = isNew && score > 0 ? "🏆 HIGH SCORE BARU!" : "🏆 Rekor (" + CATS[sel.cat] + " · " + sel.diff + "): " + (s.records[rk] || 0);
+  $("rPlays").textContent = "Total permainan: " + s.plays + " · Benar " + s.right + " · Salah " + s.wrong;
   resultAt = Date.now();
   show("result");
 }

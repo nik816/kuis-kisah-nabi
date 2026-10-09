@@ -21,7 +21,7 @@
     <p class="tag">Interactive Quiz</p>
     <p class="subtitle">Belajar kisah, uji pengetahuan, dan temukan keteladanan.</p>
     <ul class="chips" aria-label="Info game">
-      <li><b id="nQ">40</b> soal</li><li><b>4</b> kategori</li><li><b>3</b> nyawa</li><li><b>15</b> detik</li>
+      <li><b id="nQ">0</b> soal</li><li><b>4</b> kategori</li><li><b>3</b> kesulitan</li><li><b>10-30</b> soal/sesi</li>
     </ul>
     <p class="highscore" aria-live="polite">🏆 High Score: <b id="hs">0</b> <span id="plays"></span></p>
     <div class="stack">
@@ -37,13 +37,11 @@
   <section id="howto" class="screen">
     <h2>📖 Cara Bermain</h2>
     <ul class="info">
-      <li>Pilih kategori.</li>
-      <li>Setiap permainan berisi 10 soal.</li>
-      <li>Waktu menjawab setiap soal adalah 15 detik.</li>
-      <li>Jawaban benar mendapat +10 poin.</li>
-      <li>Kamu punya 3 nyawa. Jawaban salah atau waktu habis mengurangi 1 nyawa.</li>
+      <li>Pilih kategori, tingkat kesulitan, dan jumlah soal.</li>
+      <li>Easy: 20 detik, 5 nyawa, +10 poin. Normal: 15 detik, 3 nyawa, +20 poin. Hard: 12 detik, 3 nyawa, +30 poin.</li>
+      <li>Jawaban salah atau waktu habis mengurangi 1 nyawa.</li>
       <li>Jawaban benar berturut-turut (3x atau lebih) membentuk combo.</li>
-      <li>Setelah selesai, lihat hasil dan high score.</li>
+      <li>Setelah selesai, lihat hasil dan rekor terbaik untuk kategori dan kesulitan itu.</li>
     </ul>
     <button class="btn" data-go="home">← Kembali</button>
   </section>
@@ -57,21 +55,37 @@
 
   <!-- KATEGORI -->
   <section id="categories" class="screen">
-    <h2>Pilih Kategori</h2>
-    <p class="subtitle">Setiap permainan berisi 10 soal.</p>
+    <h2>Atur Permainan</h2>
+    <h3>1. Kategori</h3>
     <div class="cards">
       <button class="card" data-cat="kisah"><span>📜</span><b>Kisah Nabi &amp; Rasul</b><small>Urutan dan peristiwa kisah</small></button>
       <button class="card" data-cat="mukjizat"><span>✨</span><b>Mukjizat Nabi</b><small>Tanda kebesaran Allah</small></button>
       <button class="card" data-cat="teladan"><span>🌿</span><b>Keteladanan</b><small>Sifat dan akhlak mulia</small></button>
       <button class="card" data-cat="campuran"><span>🌙</span><b>Campuran</b><small>Semua topik diacak</small></button>
     </div>
-    <button class="btn" data-go="home">← Kembali</button>
+    <h3>2. Tingkat Kesulitan</h3>
+    <div class="diffs">
+      <button class="diff" data-diff="easy"><b>Easy · Pemula</b><small>Fakta dasar · 20 detik · 5 nyawa · +10 poin</small><em class="dn"></em></button>
+      <button class="diff" data-diff="normal"><b>Normal · Menengah</b><small>Pemahaman kisah · 15 detik · 3 nyawa · +20 poin</small><em class="dn"></em></button>
+      <button class="diff" data-diff="hard"><b>Hard · Ahli</b><small>Lebih mendalam · 12 detik · 3 nyawa · +30 poin</small><em class="dn"></em></button>
+    </div>
+    <h3>3. Jumlah Soal</h3>
+    <div class="row3">
+      <button class="btn" data-count="10">10 · Cepat</button>
+      <button class="btn" data-count="20">20 · Tantangan</button>
+      <button class="btn" data-count="30">30 · Maraton</button>
+    </div>
+    <p id="avail" class="avail" aria-live="polite"></p>
+    <div class="stack">
+      <button class="btn primary big-btn" id="start">▶ Mulai Bermain</button>
+      <button class="btn" data-go="home">← Kembali</button>
+    </div>
   </section>
 
   <!-- QUIZ -->
   <section id="quiz" class="screen">
     <div class="topbar">
-      <span>SOAL <b id="qnum">1</b> / 10</span>
+      <span>SOAL <b id="qnum">1</b> / <b id="qtotal">10</b></span>
       <span id="lives" aria-label="Nyawa">❤️❤️❤️</span>
     </div>
     <div class="progress" role="progressbar" aria-label="Kemajuan soal"><div id="bar"></div></div>
@@ -93,11 +107,13 @@
   <!-- HASIL -->
   <section id="result" class="screen">
     <h2>QUIZ SELESAI!</h2>
+    <p id="rInfo" class="subtitle"></p>
     <div class="stars" id="stars"></div>
-    <p class="big"><b id="rScore">0</b> / 100</p>
+    <p class="big"><b id="rScore">0</b> / <span id="rMax">100</span></p>
     <p id="rMsg" class="subtitle"></p>
     <p id="rBest" class="highscore"></p>
     <p id="rPlays" class="subtitle"></p>
+    <p id="rMeta" class="subtitle"></p>
     <div class="stats">
       <div><b id="rRight">0</b><small>Benar</small></div>
       <div><b id="rWrong">0</b><small>Salah</small></div>
@@ -110,6 +126,7 @@
   </section>
 
 </main>
+<script src="soal-tambahan.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -88,3 +88,22 @@ h2{font-size:clamp(21px,5.5vw,27px);margin-bottom:14px}
 #tbar.low{background:var(--red)}
 #combo:not(:empty){background:rgba(53,194,176,.2);border:1px solid var(--teal);border-radius:99px;padding:1px 10px;margin-left:6px;font-size:14px;animation:pop .3s}
 .timer.low{border:1px solid var(--red)}
+
+/* ===== Kesulitan & pengaturan ===== */
+h3{font-size:16px;color:var(--gold);text-align:left;margin:16px 0 8px}
+.card.selected,.diff.selected,.btn.selected{border-color:var(--gold);background:rgba(232,189,85,.2);box-shadow:0 0 0 2px rgba(232,189,85,.35)}
+.card.selected::before,.diff.selected::before{content:"✓ Dipilih";font-size:12px;font-weight:700;color:var(--gold)}
+.diffs{display:grid;gap:10px;margin-bottom:6px}
+.diff{font:inherit;color:var(--white);text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:12px 14px;min-height:64px;cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:transform .15s,border-color .15s}
+.diff:hover{transform:translateY(-2px);border-color:var(--gold)}
+.diff small{color:var(--soft)}
+.diff .dn{color:var(--teal);font-style:normal;font-weight:700;font-size:14px}
+.diff[data-diff=easy]{border-left:6px solid var(--teal)}
+.diff[data-diff=normal]{border-left:6px solid var(--gold)}
+.diff[data-diff=hard]{border-left:6px solid var(--red)}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.row3 .btn{padding:10px 4px;font-size:14px}
+.avail{margin:12px 0 16px;color:var(--soft);min-height:24px}
+.avail.warn{color:var(--gold)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+@media(max-width:340px){.row3{grid-template-columns:1fr}}
